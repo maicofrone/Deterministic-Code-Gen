@@ -1,0 +1,4571 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<meta
+  name="description"
+  content="Deterministic code generator based on HMAC-SHA-256"
+>
+
+<meta
+  name="theme-color"
+  content="#0d1117"
+>
+
+<title>Code Generator</title>
+
+
+<style>
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+:root {
+
+  --bg: #0b0f14;
+  --bg-soft: #10161e;
+  --card: #151b23;
+  --card-hover: #19212b;
+  --input: #0e141b;
+
+  --text: #f2f5f8;
+  --text-soft: #c7ced8;
+  --muted: #8b96a5;
+
+  --primary: #6c63ff;
+  --primary-hover: #7c74ff;
+  --primary-soft: rgba(108, 99, 255, .13);
+
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, .10);
+
+  --error: #ef4444;
+  --error-soft: rgba(239, 68, 68, .10);
+
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, .10);
+
+  --border: #29313c;
+  --border-hover: #3a4553;
+
+  --shadow:
+    0 24px 70px rgba(0, 0, 0, .30);
+
+  --radius-lg: 22px;
+  --radius-md: 13px;
+  --radius-sm: 10px;
+
+}
+
+
+/* =========================================================
+   LIGHT THEME
+========================================================= */
+
+body.light {
+
+  --bg: #f3f5f9;
+  --bg-soft: #e9edf4;
+  --card: #ffffff;
+  --card-hover: #f8f9fc;
+  --input: #f5f7fa;
+
+  --text: #18202c;
+  --text-soft: #414b5a;
+  --muted: #667085;
+
+  --primary: #5548e8;
+  --primary-hover: #6256ef;
+  --primary-soft: rgba(85, 72, 232, .10);
+
+  --border: #d9dee7;
+  --border-hover: #c2c9d5;
+
+  --shadow:
+    0 24px 70px rgba(31, 41, 55, .12);
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+body {
+
+  margin: 0;
+
+  min-height: 100vh;
+
+  padding: 24px;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(108, 99, 255, .08),
+      transparent 35%
+    ),
+    var(--bg);
+
+  color: var(--text);
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  transition:
+    background .25s ease,
+    color .25s ease;
+
+}
+
+
+/* =========================================================
+   ACESSIBILIDADE
+========================================================= */
+
+button,
+input {
+  font: inherit;
+}
+
+
+button:focus-visible,
+input:focus-visible {
+
+  outline: 3px solid
+    rgba(108, 99, 255, .28);
+
+  outline-offset: 2px;
+
+}
+
+
+.sr-only {
+
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  padding: 0;
+  margin: -1px;
+
+  overflow: hidden;
+
+  clip: rect(0, 0, 0, 0);
+
+  white-space: nowrap;
+
+  border: 0;
+
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.page {
+
+  width: 100%;
+
+  max-width: 520px;
+
+  margin: 0 auto;
+
+}
+
+
+.hidden {
+  display: none !important;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.card {
+
+  width: 100%;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius-lg);
+
+  padding: 28px;
+
+  box-shadow: var(--shadow);
+
+  transition:
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.top {
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 28px;
+
+}
+
+
+.brand {
+  min-width: 0;
+}
+
+
+.title-row {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+}
+
+
+h1 {
+
+  margin: 0;
+
+  font-size: clamp(23px, 5vw, 28px);
+
+  line-height: 1.15;
+
+  letter-spacing: -.5px;
+
+}
+
+
+.subtitle {
+
+  margin-top: 7px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+}
+
+
+.ai-credit {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 10px;
+
+  color: var(--primary);
+
+  font-size: 11px;
+
+  font-weight: 650;
+
+  letter-spacing: .1px;
+
+}
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+.theme {
+
+  width: 42px;
+
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  display: grid;
+
+  place-items: center;
+
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: var(--input);
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    transform .18s ease;
+
+}
+
+
+.theme:hover {
+
+  background: var(--card-hover);
+
+  border-color: var(--border-hover);
+
+  transform: translateY(-1px);
+
+}
+
+
+.header-actions {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  flex: 0 0 auto;
+
+}
+
+
+.language {
+
+  width: 54px;
+
+  height: 42px;
+
+  flex: 0 0 54px;
+
+  display: grid;
+
+  place-items: center;
+
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: var(--input);
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+  letter-spacing: .2px;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    transform .18s ease;
+
+}
+
+
+.language:hover {
+
+  background: var(--card-hover);
+
+  border-color: var(--border-hover);
+
+  transform: translateY(-1px);
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-group {
+
+  margin-top: 18px;
+
+}
+
+
+.form-group:first-of-type {
+  margin-top: 0;
+}
+
+
+label {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 8px;
+
+  color: var(--text);
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+}
+
+
+.label-hint {
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  font-weight: 500;
+
+}
+
+
+/* =========================================================
+   FIELDS
+========================================================= */
+
+.field {
+
+  position: relative;
+
+}
+
+
+input {
+
+  width: 100%;
+
+  height: 49px;
+
+  padding:
+    0 46px
+    0 14px;
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius-sm);
+
+  background: var(--input);
+
+  color: var(--text);
+
+  outline: none;
+
+  font-size: 15px;
+
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
+
+}
+
+
+input::placeholder {
+  color: var(--muted);
+}
+
+
+input:hover {
+  border-color: var(--border-hover);
+}
+
+
+input:focus {
+
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 4px var(--primary-soft);
+
+}
+
+
+input[aria-invalid="true"] {
+
+  border-color: var(--error);
+
+  box-shadow:
+    0 0 0 4px var(--error-soft);
+
+}
+
+
+.eye {
+
+  position: absolute;
+
+  top: 4px;
+  right: 4px;
+
+  width: 40px;
+  height: 41px;
+
+  display: grid;
+
+  place-items: center;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  cursor: pointer;
+
+  font-size: 16px;
+
+  transition:
+    color .18s ease,
+    background .18s ease;
+
+}
+
+
+.eye:hover {
+
+  color: var(--text);
+
+  background: var(--card-hover);
+
+}
+
+
+.field-help {
+
+  min-height: 16px;
+
+  margin-top: 5px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+
+  line-height: 1.4;
+
+}
+
+
+.field-error {
+
+  color: var(--error);
+
+}
+
+
+/* =========================================================
+   RESULT
+========================================================= */
+
+.result {
+
+  margin-top: 26px;
+
+  padding: 19px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      var(--input),
+      var(--bg-soft)
+    );
+
+  text-align: center;
+
+}
+
+
+.result-header {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+}
+
+
+.result-title {
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  font-weight: 750;
+
+  letter-spacing: 1.3px;
+
+  text-transform: uppercase;
+
+}
+
+
+.result-state {
+
+  min-height: 18px;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  font-weight: 650;
+
+}
+
+
+.result-state.loading {
+  color: var(--primary);
+}
+
+
+.result-state.success {
+  color: var(--success);
+}
+
+
+.result-state.error {
+  color: var(--error);
+}
+
+
+.code {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 46px;
+
+  margin: 9px 0 13px;
+
+  color: var(--text);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: clamp(20px, 6vw, 27px);
+
+  font-weight: 750;
+
+  letter-spacing: 3px;
+
+  line-height: 1.2;
+
+  word-break: break-all;
+
+}
+
+
+.code.loading {
+
+  color: var(--primary);
+
+  animation: pulse 1s ease-in-out infinite;
+
+}
+
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: .45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.copy {
+
+  width: 100%;
+
+  min-height: 44px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background: var(--primary);
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+  transition:
+    background .18s ease,
+    transform .18s ease,
+    opacity .18s ease;
+
+}
+
+
+.copy:hover:not(:disabled) {
+
+  background: var(--primary-hover);
+
+  transform: translateY(-1px);
+
+}
+
+
+.copy:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+.copy:disabled {
+
+  opacity: .35;
+
+  cursor: not-allowed;
+
+}
+
+
+.clear {
+
+  width: 100%;
+
+  min-height: 42px;
+
+  margin-top: 10px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 650;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease;
+
+}
+
+
+.clear:hover {
+
+  background: var(--card-hover);
+
+  border-color: var(--border-hover);
+
+}
+
+
+/* =========================================================
+   HOW IT WORKS
+========================================================= */
+
+.how-button {
+
+  width: 100%;
+
+  min-height: 44px;
+
+  margin-top: 18px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    transform .18s ease;
+
+}
+
+
+.how-button:hover {
+
+  background: var(--card-hover);
+
+  border-color: var(--border-hover);
+
+  transform: translateY(-1px);
+
+}
+
+
+/* =========================================================
+   EXPLANATION
+========================================================= */
+
+.explanation {
+
+  max-height:
+    calc(100vh - 48px);
+
+  overflow-y: auto;
+
+}
+
+
+.explanation h2 {
+
+  margin: 0;
+
+  font-size: 25px;
+
+  letter-spacing: -.4px;
+
+}
+
+
+.explanation h3 {
+
+  margin:
+    26px 0 9px;
+
+  font-size: 16px;
+
+}
+
+
+.explanation p {
+
+  margin: 8px 0;
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.72;
+
+}
+
+
+.explanation ul,
+.explanation ol {
+
+  margin: 8px 0;
+
+  padding-left: 22px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.72;
+
+}
+
+
+.explanation li {
+  margin: 4px 0;
+}
+
+
+.explanation strong {
+  color: var(--text);
+}
+
+
+.explanation code {
+
+  padding: 1px 4px;
+
+  border-radius: 4px;
+
+  background: var(--bg-soft);
+
+  color: var(--text);
+
+  font-family: monospace;
+
+}
+
+
+.step {
+
+  margin: 16px 0;
+
+  padding: 16px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: var(--input);
+
+}
+
+
+.step-title {
+
+  margin-bottom: 7px;
+
+  color: var(--text);
+
+  font-size: 13px;
+
+  font-weight: 750;
+
+}
+
+
+.formula {
+
+  margin: 12px 0;
+
+  padding: 13px;
+
+  overflow-x: auto;
+
+  border: 1px solid var(--border);
+
+  border-radius: 9px;
+
+  background: var(--bg-soft);
+
+  color: var(--text-soft);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 11px;
+
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+
+  overflow-wrap: anywhere;
+
+}
+
+
+.security {
+
+  margin-top: 22px;
+
+  padding: 16px;
+
+  border: 1px solid
+    rgba(34, 197, 94, .22);
+
+  border-radius: 12px;
+
+  background: var(--success-soft);
+
+}
+
+
+.security h3 {
+
+  margin-top: 0;
+
+}
+
+
+.warning {
+
+  margin-top: 18px;
+
+  padding: 16px;
+
+  border: 1px solid
+    rgba(245, 158, 11, .22);
+
+  border-radius: 12px;
+
+  background: var(--warning-soft);
+
+}
+
+
+.warning h3 {
+  margin-top: 0;
+}
+
+
+/* =========================================================
+   BACK
+========================================================= */
+
+.back {
+
+  width: 100%;
+
+  min-height: 43px;
+
+  margin-bottom: 21px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease;
+
+}
+
+
+.back:hover {
+
+  background: var(--card-hover);
+
+  border-color: var(--border-hover);
+
+}
+
+
+/* =========================================================
+   RESPONSIVENESS
+========================================================= */
+
+@media (max-width: 520px) {
+
+  body {
+    padding: 12px;
+  }
+
+
+  .card {
+    padding: 21px;
+    border-radius: 18px;
+  }
+
+
+  .top {
+    margin-bottom: 23px;
+  }
+
+
+  .code {
+    letter-spacing: 2px;
+  }
+
+
+  .explanation {
+    max-height:
+      calc(100vh - 24px);
+  }
+
+}
+
+
+@media (max-width: 360px) {
+
+  body {
+    padding: 8px;
+  }
+
+
+  .card {
+    padding: 17px;
+  }
+
+
+  h1 {
+    font-size: 22px;
+  }
+
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+
+  .code {
+    font-size: 19px;
+    letter-spacing: 1.5px;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+
+    scroll-behavior: auto !important;
+
+    transition-duration:
+      .01ms !important;
+
+    animation-duration:
+      .01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =======================================================
+     GENERATOR
+======================================================== -->
+
+<main
+  class="page"
+  id="mainPage"
+>
+
+  <section
+    class="card"
+    aria-labelledby="pageTitle"
+  >
+
+
+    <!-- HEADER -->
+
+    <header class="top">
+
+      <div class="brand">
+
+        <div class="title-row">
+
+          <h1 id="pageTitle">
+            🔐 Generator
+          </h1>
+
+        </div>
+
+
+        <div class="subtitle">
+          Generate deterministic codes locally.
+        </div>
+
+
+        <div class="ai-credit">
+          ✨ Made by maicofrone, using ChatGPT
+        </div>
+
+      </div>
+
+
+      <div class="header-actions">
+
+        <button
+          class="language"
+          id="languageToggle"
+          type="button"
+          aria-label="Switch to Portuguese (Brazil)"
+          title="Switch language"
+        >
+          EN
+        </button>
+
+        <button
+          class="theme"
+          id="theme"
+          type="button"
+          aria-label="Toggle between dark mode and light mode"
+          title="Toggle theme"
+          aria-pressed="false"
+        >
+          🌙
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- NAME -->
+
+    <div class="form-group">
+
+      <label for="name">
+        <span>Name</span>
+        <span class="label-hint">required</span>
+      </label>
+
+
+      <div class="field">
+
+        <input
+          id="name"
+          type="text"
+          name="generator-name"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Enter name"
+          aria-required="true"
+          aria-describedby="nameHelp"
+        >
+
+      </div>
+
+
+      <div
+        class="field-help"
+        id="nameHelp"
+      >
+        The name is normalized before calculation.
+      </div>
+
+    </div>
+
+
+    <!-- PASSWORD -->
+
+    <div class="form-group">
+
+      <label for="password">
+        <span>Password</span>
+        <span class="label-hint">required</span>
+      </label>
+
+
+      <div class="field">
+
+        <input
+          id="password"
+          type="password"
+          name="password"
+          autocomplete="new-password"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Enter password"
+          aria-required="true"
+          aria-describedby="passwordHelp"
+        >
+
+
+        <button
+          class="eye"
+          id="eyePassword"
+          type="button"
+          aria-label="Show password"
+          title="Show password"
+          aria-pressed="false"
+        >
+          👁
+        </button>
+
+      </div>
+
+
+      <div
+        class="field-help"
+        id="passwordHelp"
+      >
+        The password is used as the HMAC-SHA-256 key.
+      </div>
+
+    </div>
+
+
+    <!-- PIN -->
+
+    <div class="form-group">
+
+      <label for="pin">
+        <span>PIN</span>
+        <span class="label-hint">4 digits</span>
+      </label>
+
+
+      <div class="field">
+
+        <input
+          id="pin"
+          type="password"
+          name="pin"
+          inputmode="numeric"
+          pattern="[0-9]{4}"
+          maxlength="4"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="0000"
+          aria-required="true"
+          aria-describedby="pinHelp"
+        >
+
+
+        <button
+          class="eye"
+          id="eyePin"
+          type="button"
+          aria-label="Show PIN"
+          title="Show PIN"
+          aria-pressed="false"
+        >
+          👁
+        </button>
+
+      </div>
+
+
+      <div
+        class="field-help"
+        id="pinHelp"
+      >
+        Enter exactly 4 numeric digits.
+      </div>
+
+    </div>
+
+
+    <!-- RESULT -->
+
+    <section
+      class="result"
+      aria-labelledby="resultTitle"
+    >
+
+      <div class="result-header">
+
+        <div
+          class="result-title"
+          id="resultTitle"
+        >
+          Code
+        </div>
+
+
+        <div
+          class="result-state"
+          id="status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          Waiting for input
+        </div>
+
+      </div>
+
+
+      <div
+        class="code"
+        id="code"
+        aria-live="polite"
+        aria-label="Generated code"
+        aria-describedby="resultTitle"
+        aria-disabled="true"
+      >
+        ------------
+      </div>
+
+
+      <button
+        class="copy"
+        id="copy"
+        type="button"
+        disabled
+        aria-label="Copy generated code"
+      >
+        📋 Copy code
+      </button>
+
+
+      <button
+        class="clear"
+        id="clear"
+        type="button"
+        aria-label="Clear name, password, PIN, and code"
+      >
+        Clear
+      </button>
+
+    </section>
+
+
+    <!-- HOW IT WORKS -->
+
+    <button
+      class="how-button"
+      id="howButton"
+      type="button"
+      aria-label="Open a detailed explanation of how the generator works"
+    >
+      📖 How does it work?
+    </button>
+
+
+  </section>
+
+</main>
+
+
+<!-- =======================================================
+     EXPLANATION PAGE
+======================================================== -->
+
+<main
+  class="page hidden"
+  id="explanationPage"
+>
+
+  <section
+    class="card explanation"
+    aria-labelledby="explanationTitle"
+  >
+
+
+    <button
+      class="back"
+      id="backButton"
+      type="button"
+      aria-label="Back to generator"
+    >
+      ← Back to generator
+    </button>
+
+
+    <h2 id="explanationTitle">
+      📖 How does it work?
+    </h2>
+
+
+    <p>
+      This application is a deterministic code generator
+      based on HMAC-SHA-256. All processing takes place
+      locally in the browser.
+    </p>
+
+
+    <p>
+      It is not TOTP and must not be presented as a system
+      for two-factor authentication. Its purpose is to produce
+      the same code for the same combination of inputs every time.
+    </p>
+
+
+    <!-- FLUXO -->
+
+    <div class="formula">Name
+  ↓
+Normalization
+  ↓
+Counting letters/vowels/consonants
+  ↓
+PIN
+  ↓
+BASE calculation
+  ↓
+Message
+  ↓
+Password as HMAC key
+  ↓
+HMAC-SHA-256
+  ↓
+BigInt
+  ↓
+Modulo 62¹²
+  ↓
+Base62
+  ↓
+Final 12-character code</div>
+
+
+    <!-- 1 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        1. Input data
+      </div>
+
+
+      <p>
+        The system receives three inputs:
+      </p>
+
+
+      <ul>
+
+        <li>
+          <strong>Name</strong>
+        </li>
+
+        <li>
+          <strong>Password</strong>
+        </li>
+
+        <li>
+          <strong>PIN of exactly 4 digits</strong>
+        </li>
+
+      </ul>
+
+
+      <p>
+        All three values are required to generate the code.
+        There is no default password or PIN.
+      </p>
+
+
+      <div class="formula">Name:
+Generator
+
+Password:
+password123
+
+PIN:
+0123</div>
+
+    </div>
+
+
+    <!-- 2 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        2. Name normalization
+      </div>
+
+
+      <p>
+        Leading and trailing spaces are removed from the name,
+        converted to lowercase and normalized using
+        Unicode.
+      </p>
+
+
+      <div class="formula">Input:
+Generator
+
+Result:
+generator</div>
+
+
+      <p>
+        The normalized result is used in the following steps.
+      
+      </p>
+
+    </div>
+
+
+    <!-- 3 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        3. Counting letters, vowels, and consonants
+      </div>
+
+
+      <p>
+        The application iterates through the normalized name and considers
+        only characters recognized as Unicode letters.
+      </p>
+
+
+      <div class="formula">g e r a d o r</div>
+
+
+      <p>
+        For <code>generator</code>:
+      </p>
+
+
+      <div class="formula">Letters:
+7
+
+Vowels:
+3
+
+Consonants:
+4</div>
+
+
+      <p>
+        Therefore:
+      </p>
+
+
+      <div class="formula">letters = 7
+vowels = 3
+consonants = 4</div>
+
+    </div>
+
+
+    <!-- 4 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        4. PIN interpretation
+      </div>
+
+
+      <p>
+        The PIN defines the multipliers used in the calculation
+        the BASE.
+      </p>
+
+
+      <p>
+        In the example:
+      </p>
+
+
+      <div class="formula">PIN = 0123
+
+01 | 2 | 3</div>
+
+
+      <p>
+        The code splits the PIN as follows:
+      </p>
+
+
+      <div class="formula">AB = 01
+C  = 2
+D  = 3
+
+CD = 23</div>
+
+
+      <p>
+        The values are converted numerically as follows:
+      </p>
+
+
+      <div class="formula">AB = 1
+C  = 2
+D  = 3
+CD = 23</div>
+
+    </div>
+
+
+    <!-- 5 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        5. BASE calculation
+      </div>
+
+
+      <p>
+        The implemented formula is:
+      </p>
+
+
+      <div class="formula">BASE =
+(letters × AB)
++
+(vowels × C)
++
+(consonants × D)
++
+(AB × CD)</div>
+
+
+      <p>
+        Using the example:
+      </p>
+
+
+      <div class="formula">letters = 7
+vowels = 3
+consonants = 4
+
+AB = 1
+C = 2
+D = 3
+CD = 23</div>
+
+
+      <p>
+        The calculations are:
+      </p>
+
+
+      <div class="formula">7 × 1 = 7
+
+3 × 2 = 6
+
+4 × 3 = 12
+
+1 × 23 = 23</div>
+
+
+      <p>
+        Somando:
+      </p>
+
+
+      <div class="formula">7 + 6 + 12 + 23 = 48</div>
+
+
+      <p>
+        Therefore:
+      </p>
+
+
+      <div class="formula">BASE = 48</div>
+
+    </div>
+
+
+    <!-- 6 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        6. Message creation
+      </div>
+
+
+      <p>
+        The BASE is combined with the normalized name and PIN into
+        a standardized message.
+      </p>
+
+
+      <div class="formula">name=generator|pin=0123|base=48</div>
+
+
+      <p>
+        The format used by the code is:
+      </p>
+
+
+      <div class="formula">name=NORMALIZED_NAME|pin=PIN|base=BASE</div>
+
+
+      <p>
+        The message is deterministic: for the same inputs,
+        it will be exactly the same.
+      </p>
+
+    </div>
+
+
+    <!-- 7 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        7. Password as the HMAC key
+      </div>
+
+
+      <p>
+        The password is not simply concatenated to the message.
+        It is used as the HMAC cryptographic key.
+      </p>
+
+
+      <div class="formula">Key:
+password123
+
+Message:
+name=generator|pin=0123|base=48
+
+Algorithm:
+HMAC-SHA-256</div>
+
+
+      <p>
+        The application uses the browser-native Web Crypto API
+        through <code>crypto.subtle</code>.
+      </p>
+
+    </div>
+
+
+    <!-- 8 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        8. HMAC-SHA-256
+      </div>
+
+
+      <p>
+        The browser calculates HMAC-SHA-256 using the password
+        as the key and the message as the authenticated content.
+      </p>
+
+
+      <div class="formula">password123
+      +
+name=generator|pin=0123|base=48
+      ↓
+HMAC-SHA-256
+      ↓
+32 bytes</div>
+
+
+      <p>
+        SHA-256 produces a 256-bit result, which
+        corresponds to 32 bytes.
+      </p>
+
+    </div>
+
+
+    <!-- 9 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        9. Conversion to BigInt
+      </div>
+
+
+      <p>
+        The 32 bytes produced by HMAC are interpreted
+        as a single positive integer using
+        <code>BigInt</code>.
+      </p>
+
+
+      <div class="formula">32 bytes
+   ↓
+BigInt</div>
+
+
+      <p>
+        This allows the required numeric conversion to be performed
+        without relying on the limited precision of
+        standard JavaScript numbers.
+      </p>
+
+    </div>
+
+
+    <!-- 10 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        10. Modulo 62¹²
+      </div>
+
+
+      <p>
+        To limit the result to the space of possible
+        codes with exactly 12 Base62 characters,
+        the number is reduced using modulo
+        <code>62¹²</code>.
+      </p>
+
+
+      <div class="formula">BigInt
+  ↓
+BigInt % 62¹²</div>
+
+
+      <p>
+        This step keeps the result within the range
+        required to represent 12 Base62 positions.
+      </p>
+
+    </div>
+
+
+    <!-- 11 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        11. Base62
+      </div>
+
+
+      <p>
+        The number is converted using 62 symbols:
+      </p>
+
+
+      <div class="formula">ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789</div>
+
+
+      <p>
+        There are 26 uppercase letters, 26 lowercase letters, and
+        10 digits, for a total of 62 characters.
+      </p>
+
+    </div>
+
+
+    <!-- 12 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        12. Final code
+      </div>
+
+
+      <p>
+        The conversion is performed until exactly
+        12 characters are formed.
+      </p>
+
+
+      <div class="formula">HMAC-SHA-256
+      ↓
+BigInt
+      ↓
+modulo 62¹²
+      ↓
+Base62
+      ↓
+12 characters</div>
+
+
+      <p>
+        If the representation needs additional characters
+        to fill the 12 positions, the algorithm fills
+        the leading positions with the first symbol of the
+        Base62 alphabet.
+      </p>
+
+    </div>
+
+
+    <!-- 13 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        13. Determinism
+      </div>
+
+
+      <p>
+        The system does not use random numbers, dates, or
+        time.
+      </p>
+
+
+      <p>
+        Therefore, when keeping exactly the same inputs:
+      </p>
+
+
+      <div class="formula">Name:
+Generator
+
+Password:
+password123
+
+PIN:
+0123</div>
+
+
+      <p>
+        the steps will produce the same message, the same HMAC
+        and the same final code.
+      </p>
+
+
+      <div class="formula">same inputs
+      ↓
+same BASE
+      ↓
+same message
+      ↓
+same HMAC
+      ↓
+same code</div>
+
+
+      <p>
+        Changing the name, password, or PIN changes the input to the
+        process and consequently changes the expected result.
+      </p>
+
+    </div>
+
+
+    <!-- 14 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        14. Automatic update
+      </div>
+
+
+      <p>
+        The generator monitors changes to all three fields.
+        When Name, Password, or PIN is modified, a new
+        generation is started.
+      </p>
+
+
+      <div class="formula">Name changed
+      ↓
+new generation
+
+Password changed
+      ↓
+new generation
+
+PIN changed
+      ↓
+new generation</div>
+
+
+      <p>
+        Processing continues to occur only in the
+        browser.
+      </p>
+
+    </div>
+
+
+    <!-- 15 -->
+
+    <div class="step">
+
+      <div class="step-title">
+        15. Protection against stale results
+      </div>
+
+
+      <p>
+        HMAC is calculated asynchronously. Therefore,
+        a rapid change to the fields could start
+        multiple calculations at the same time.
+      </p>
+
+
+      <p>
+        The application assigns an identifier to each generation.
+        When a calculation finishes, its identifier is
+        compared with the latest generation identifier.
+      </p>
+
+
+      <div class="formula">Generation 1 started
+      ↓
+user changes the inputs
+      ↓
+Generation 2 started
+      ↓
+Generation 2 finishes
+      ↓
+Generation 1 finishes later
+      ↓
+Generation 1 result is ignored</div>
+
+
+      <p>
+        Thus, an old calculation cannot replace the
+        most recent result.
+      </p>
+
+    </div>
+
+
+    <!-- SECURITY -->
+
+    <div class="security">
+
+      <h3>
+        🔒 Security and privacy
+      </h3>
+
+
+      <p>
+        Processing is performed 100% locally in the
+        browser.
+      </p>
+
+
+      <p>
+        The application does not send Name, Password, PIN, or code
+        to any server.
+      </p>
+
+
+      <p>
+        It does not use a database, external API, or third-party
+        service.
+      </p>
+
+
+      <p>
+        Password and PIN are not stored in
+        <code>localStorage</code> or
+        <code>sessionStorage</code>.
+      </p>
+
+
+      <p>
+        The system does not use <code>Math.random()</code>,
+        date, time, or TOTP.
+      </p>
+
+
+      <p>
+        The browser Web Crypto API is used to
+        perform HMAC-SHA-256.
+      </p>
+
+    </div>
+
+
+    <!-- AVISO -->
+
+    <div class="warning">
+
+      <h3>
+        ⚠️ Important
+      </h3>
+
+
+      <p>
+        This application is a deterministic code generator
+        based on HMAC-SHA-256.
+      </p>
+
+
+      <p>
+        It <strong>is not TOTP</strong> and must not be
+        considered a two-factor authentication
+        authentication system.
+      </p>
+
+
+      <p>
+        This project does not replace professional authentication
+        mechanisms, credential management, or
+        security systems specifically developed
+        for this purpose.
+      </p>
+
+    </div>
+
+
+    <!-- FINAL EXAMPLE -->
+
+    <div class="step">
+
+      <div class="step-title">
+        16. Complete example
+      </div>
+
+
+      <p>
+        Using:
+      </p>
+
+
+      <div class="formula">Name:
+Generator
+
+Password:
+password123
+
+PIN:
+0123</div>
+
+
+      <p>
+        The process will be:
+      </p>
+
+
+      <div class="formula">Generator
+  ↓
+generator
+  ↓
+7 letters
+3 vowels
+4 consonants
+  ↓
+PIN 0123
+  ↓
+01 | 2 | 3
+  ↓
+BASE = 48
+  ↓
+name=generator|pin=0123|base=48
+  ↓
+password123 as the key
+  ↓
+HMAC-SHA-256
+  ↓
+BigInt
+  ↓
+modulo 62¹²
+  ↓
+Base62
+  ↓
+12 characters</div>
+
+
+    </div>
+
+
+    <button
+      class="back"
+      id="backButtonBottom"
+      type="button"
+      aria-label="Back to generator"
+    >
+      ← Back to generator
+    </button>
+
+
+  </section>
+
+</main>
+
+
+<script>
+
+/* =========================================================
+   CONFIGURATION
+========================================================= */
+
+"use strict";
+
+
+const BASE62 =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+
+const VOWELS = new Set([
+
+  "a", "e", "i", "o", "u",
+
+  "á", "à", "ã", "â", "ä",
+
+  "é", "è", "ê", "ë",
+
+  "í", "ì", "î", "ï",
+
+  "ó", "ò", "õ", "ô", "ö",
+
+  "ú", "ù", "û", "ü"
+
+]);
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const elements = {
+
+  name:
+    document.getElementById("name"),
+
+  password:
+    document.getElementById("password"),
+
+  pin:
+    document.getElementById("pin"),
+
+  code:
+    document.getElementById("code"),
+
+  copy:
+    document.getElementById("copy"),
+
+  clear:
+    document.getElementById("clear"),
+
+  status:
+    document.getElementById("status"),
+
+  theme:
+    document.getElementById("theme"),
+
+  language:
+    document.getElementById("languageToggle"),
+
+  eyePassword:
+    document.getElementById("eyePassword"),
+
+  eyePin:
+    document.getElementById("eyePin"),
+
+  mainPage:
+    document.getElementById("mainPage"),
+
+  explanationPage:
+    document.getElementById("explanationPage"),
+
+  howButton:
+    document.getElementById("howButton"),
+
+  backButton:
+    document.getElementById("backButton"),
+
+  backButtonBottom:
+    document.getElementById("backButtonBottom")
+
+};
+
+
+/* =========================================================
+   GENERATION CONTROL
+========================================================= */
+
+let generationId = 0;
+
+
+/* =========================================================
+   LANGUAGE SUPPORT
+========================================================= */
+
+const LANGUAGE_TEXT = {
+
+  "en-US": [
+  "\n            🔐 Generator\n          ",
+  "\n          Generate deterministic codes locally.\n        ",
+  "\n          ✨ Made by maicofrone, using ChatGPT\n        ",
+  "Name",
+  "required",
+  "\n        The name is normalized before calculation.\n      ",
+  "Password",
+  "required",
+  "\n        The password is used as the HMAC-SHA-256 key.\n      ",
+  "PIN",
+  "4 digits",
+  "\n        Enter exactly 4 numeric digits.\n      ",
+  "\n          Code\n        ",
+  "\n        📋 Copy code\n      ",
+  "\n        Clear\n      ",
+  "\n      📖 How does it work?\n    ",
+  "\n      ← Back to generator\n    ",
+  "\n      📖 How does it work?\n    ",
+  "\n      This application is a deterministic code generator\n      based on HMAC-SHA-256. All processing takes place\n      locally in the browser.\n    ",
+  "\n      It is not TOTP and must not be presented as a system\n      for two-factor authentication. Its purpose is to produce\n      the same code for the same combination of inputs every time.\n    ",
+  "Name\n  ↓\nNormalization\n  ↓\nCounting letters/vowels/consonants\n  ↓\nPIN\n  ↓\nBASE calculation\n  ↓\nMessage\n  ↓\nPassword as HMAC key\n  ↓\nHMAC-SHA-256\n  ↓\nBigInt\n  ↓\nModulo 62¹²\n  ↓\nBase62\n  ↓\nFinal 12-character code",
+  "\n        1. Input data\n      ",
+  "\n        The system receives three inputs:\n      ",
+  "Name",
+  "Password",
+  "PIN of exactly 4 digits",
+  "\n        All three values are required to generate the code.\n        There is no default password or PIN.\n      ",
+  "Name:\nGenerator\n\nPassword:\npassword123\n\nPIN:\n0123",
+  "\n        2. Name normalization\n      ",
+  "\n        Leading and trailing spaces are removed from the name,\n        converted to lowercase and normalized using\n        Unicode.\n      ",
+  "Input:\nGenerator\n\nResult:\ngenerator",
+  "\n        The normalized result is used in the following steps.\n      \n      ",
+  "\n        3. Counting letters, vowels, and consonants\n      ",
+  "\n        The application iterates through the normalized name and considers\n        only characters recognized as Unicode letters.\n      ",
+  "g e r a d o r",
+  "\n        For ",
+  "generator",
+  ":\n      ",
+  "Letters:\n7\n\nVowels:\n3\n\nConsonants:\n4",
+  "\n        Therefore:\n      ",
+  "letters = 7\nvowels = 3\nconsonants = 4",
+  "\n        4. PIN interpretation\n      ",
+  "\n        The PIN defines the multipliers used in the calculation\n        the BASE.\n      ",
+  "\n        In the example:\n      ",
+  "PIN = 0123\n\n01 | 2 | 3",
+  "\n        The code splits the PIN as follows:\n      ",
+  "AB = 01\nC  = 2\nD  = 3\n\nCD = 23",
+  "\n        The values are converted numerically as follows:\n      ",
+  "AB = 1\nC  = 2\nD  = 3\nCD = 23",
+  "\n        5. BASE calculation\n      ",
+  "\n        The implemented formula is:\n      ",
+  "BASE =\n(letters × AB)\n+\n(vowels × C)\n+\n(consonants × D)\n+\n(AB × CD)",
+  "\n        Using the example:\n      ",
+  "letters = 7\nvowels = 3\nconsonants = 4\n\nAB = 1\nC = 2\nD = 3\nCD = 23",
+  "\n        The calculations are:\n      ",
+  "7 × 1 = 7\n\n3 × 2 = 6\n\n4 × 3 = 12\n\n1 × 23 = 23",
+  "\n        Somando:\n      ",
+  "7 + 6 + 12 + 23 = 48",
+  "\n        Therefore:\n      ",
+  "BASE = 48",
+  "\n        6. Message creation\n      ",
+  "\n        The BASE is combined with the normalized name and PIN into\n        a standardized message.\n      ",
+  "name=generator|pin=0123|base=48",
+  "\n        The format used by the code is:\n      ",
+  "name=NORMALIZED_NAME|pin=PIN|base=BASE",
+  "\n        The message is deterministic: for the same inputs,\n        it will be exactly the same.\n      ",
+  "\n        7. Password as the HMAC key\n      ",
+  "\n        The password is not simply concatenated to the message.\n        It is used as the HMAC cryptographic key.\n      ",
+  "Key:\npassword123\n\nMessage:\nname=generator|pin=0123|base=48\n\nAlgorithm:\nHMAC-SHA-256",
+  "\n        The application uses the browser-native Web Crypto API\n        through ",
+  "crypto.subtle",
+  ".\n      ",
+  "\n        8. HMAC-SHA-256\n      ",
+  "\n        The browser calculates HMAC-SHA-256 using the password\n        as the key and the message as the authenticated content.\n      ",
+  "password123\n      +\nname=generator|pin=0123|base=48\n      ↓\nHMAC-SHA-256\n      ↓\n32 bytes",
+  "\n        SHA-256 produces a 256-bit result, which\n        corresponds to 32 bytes.\n      ",
+  "\n        9. Conversion to BigInt\n      ",
+  "\n        The 32 bytes produced by HMAC are interpreted\n        as a single positive integer using\n        ",
+  "BigInt",
+  ".\n      ",
+  "32 bytes\n   ↓\nBigInt",
+  "\n        This allows the required numeric conversion to be performed\n        without relying on the limited precision of\n        standard JavaScript numbers.\n      ",
+  "\n        10. Modulo 62¹²\n      ",
+  "\n        To limit the result to the space of possible\n        codes with exactly 12 Base62 characters,\n        the number is reduced using modulo\n        ",
+  "62¹²",
+  ".\n      ",
+  "BigInt\n  ↓\nBigInt % 62¹²",
+  "\n        This step keeps the result within the range\n        required to represent 12 Base62 positions.\n      ",
+  "\n        11. Base62\n      ",
+  "\n        The number is converted using 62 symbols:\n      ",
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789",
+  "\n        There are 26 uppercase letters, 26 lowercase letters, and\n        10 digits, for a total of 62 characters.\n      ",
+  "\n        12. Final code\n      ",
+  "\n        The conversion is performed until exactly\n        12 characters are formed.\n      ",
+  "HMAC-SHA-256\n      ↓\nBigInt\n      ↓\nmodulo 62¹²\n      ↓\nBase62\n      ↓\n12 characters",
+  "\n        If the representation needs additional characters\n        to fill the 12 positions, the algorithm fills\n        the leading positions with the first symbol of the\n        Base62 alphabet.\n      ",
+  "\n        13. Determinism\n      ",
+  "\n        The system does not use random numbers, dates, or\n        time.\n      ",
+  "\n        Therefore, when keeping exactly the same inputs:\n      ",
+  "Name:\nGenerator\n\nPassword:\npassword123\n\nPIN:\n0123",
+  "\n        the steps will produce the same message, the same HMAC\n        and the same final code.\n      ",
+  "same inputs\n      ↓\nsame BASE\n      ↓\nsame message\n      ↓\nsame HMAC\n      ↓\nsame code",
+  "\n        Changing the name, password, or PIN changes the input to the\n        process and consequently changes the expected result.\n      ",
+  "\n        14. Automatic update\n      ",
+  "\n        The generator monitors changes to all three fields.\n        When Name, Password, or PIN is modified, a new\n        generation is started.\n      ",
+  "Name changed\n      ↓\nnew generation\n\nPassword changed\n      ↓\nnew generation\n\nPIN changed\n      ↓\nnew generation",
+  "\n        Processing continues to occur only in the\n        browser.\n      ",
+  "\n        15. Protection against stale results\n      ",
+  "\n        HMAC is calculated asynchronously. Therefore,\n        a rapid change to the fields could start\n        multiple calculations at the same time.\n      ",
+  "\n        The application assigns an identifier to each generation.\n        When a calculation finishes, its identifier is\n        compared with the latest generation identifier.\n      ",
+  "Generation 1 started\n      ↓\nuser changes the inputs\n      ↓\nGeneration 2 started\n      ↓\nGeneration 2 finishes\n      ↓\nGeneration 1 finishes later\n      ↓\nGeneration 1 result is ignored",
+  "\n        Thus, an old calculation cannot replace the\n        most recent result.\n      ",
+  "\n        🔒 Security and privacy\n      ",
+  "\n        Processing is performed 100% locally in the\n        browser.\n      ",
+  "\n        The application does not send Name, Password, PIN, or code\n        to any server.\n      ",
+  "\n        It does not use a database, external API, or third-party\n        service.\n      ",
+  "\n        Password and PIN are not stored in\n        ",
+  "localStorage",
+  " or\n        ",
+  "sessionStorage",
+  ".\n      ",
+  "\n        The system does not use ",
+  "Math.random()",
+  ",\n        date, time, or TOTP.\n      ",
+  "\n        The browser Web Crypto API is used to\n        perform HMAC-SHA-256.\n      ",
+  "\n        ⚠️ Important\n      ",
+  "\n        This application is a deterministic code generator\n        based on HMAC-SHA-256.\n      ",
+  "\n        It ",
+  "is not TOTP",
+  " and must not be\n        considered a two-factor authentication\n        authentication system.\n      ",
+  "\n        This project does not replace professional authentication\n        mechanisms, credential management, or\n        security systems specifically developed\n        for this purpose.\n      ",
+  "\n        16. Complete example\n      ",
+  "\n        Using:\n      ",
+  "Name:\nGenerator\n\nPassword:\npassword123\n\nPIN:\n0123",
+  "\n        The process will be:\n      ",
+  "Generator\n  ↓\ngenerator\n  ↓\n7 letters\n3 vowels\n4 consonants\n  ↓\nPIN 0123\n  ↓\n01 | 2 | 3\n  ↓\nBASE = 48\n  ↓\nname=generator|pin=0123|base=48\n  ↓\npassword123 as the key\n  ↓\nHMAC-SHA-256\n  ↓\nBigInt\n  ↓\nmodulo 62¹²\n  ↓\nBase62\n  ↓\n12 characters",
+  "\n      ← Back to generator\n    "
+],
+
+  "pt-BR": [
+  "\n            🔐 Gerador\n          ",
+  "\n          Gere códigos determinísticos de forma local.\n        ",
+  "\n          ✨ Feito por maicofrone, usando ChatGPT\n        ",
+  "Nome",
+  "obrigatório",
+  "\n        O nome é normalizado antes do cálculo.\n      ",
+  "Senha",
+  "obrigatória",
+  "\n        A senha é utilizada como chave do HMAC-SHA-256.\n      ",
+  "PIN",
+  "4 dígitos",
+  "\n        Informe exatamente 4 dígitos numéricos.\n      ",
+  "\n          Código\n        ",
+  "\n        📋 Copiar código\n      ",
+  "\n        Limpar\n      ",
+  "\n      📖 Como funciona?\n    ",
+  "\n      ← Voltar para o gerador\n    ",
+  "\n      📖 Como funciona?\n    ",
+  "\n      Este aplicativo é um gerador determinístico de códigos\n      baseado em HMAC-SHA-256. Todo o processamento acontece\n      localmente no navegador.\n    ",
+  "\n      Ele não é TOTP e não deve ser apresentado como um sistema\n      de autenticação de dois fatores. O objetivo é produzir\n      sempre o mesmo código para a mesma combinação de dados.\n    ",
+  "Nome\n  ↓\nNormalização\n  ↓\nContagem de letras/vogais/consoantes\n  ↓\nPIN\n  ↓\nCálculo da BASE\n  ↓\nMensagem\n  ↓\nSenha como chave HMAC\n  ↓\nHMAC-SHA-256\n  ↓\nBigInt\n  ↓\nMódulo 62¹²\n  ↓\nBase62\n  ↓\nCódigo final de 12 caracteres",
+  "\n        1. Dados de entrada\n      ",
+  "\n        O sistema recebe três entradas:\n      ",
+  "Nome",
+  "Senha",
+  "PIN de exatamente 4 dígitos",
+  "\n        Os três valores são obrigatórios para gerar o código.\n        Não existem senha ou PIN padrão.\n      ",
+  "Nome:\nGerador\n\nSenha:\nsenha123\n\nPIN:\n0123",
+  "\n        2. Normalização do nome\n      ",
+  "\n        O nome é removido de espaços no início e no final,\n        convertido para minúsculas e normalizado utilizando\n        Unicode.\n      ",
+  "Entrada:\nGerador\n\nResultado:\ngerador",
+  "\n        É o resultado normalizado que participa das etapas\n        seguintes.\n      ",
+  "\n        3. Contagem de letras, vogais e consoantes\n      ",
+  "\n        O aplicativo percorre o nome normalizado e considera\n        somente caracteres reconhecidos como letras Unicode.\n      ",
+  "g e r a d o r",
+  "\n        Para ",
+  "gerador",
+  ":\n      ",
+  "Letras:\n7\n\nVogais:\n3\n\nConsoantes:\n4",
+  "\n        Portanto:\n      ",
+  "letras = 7\nvogais = 3\nconsoantes = 4",
+  "\n        4. Interpretação do PIN\n      ",
+  "\n        O PIN define os multiplicadores utilizados no cálculo\n        da BASE.\n      ",
+  "\n        No exemplo:\n      ",
+  "PIN = 0123\n\n01 | 2 | 3",
+  "\n        O código divide o PIN da seguinte maneira:\n      ",
+  "AB = 01\nC  = 2\nD  = 3\n\nCD = 23",
+  "\n        Como os valores são convertidos numericamente:\n      ",
+  "AB = 1\nC  = 2\nD  = 3\nCD = 23",
+  "\n        5. Cálculo da BASE\n      ",
+  "\n        A fórmula implementada é:\n      ",
+  "BASE =\n(letras × AB)\n+\n(vogais × C)\n+\n(consoantes × D)\n+\n(AB × CD)",
+  "\n        Com o exemplo:\n      ",
+  "letras = 7\nvogais = 3\nconsoantes = 4\n\nAB = 1\nC = 2\nD = 3\nCD = 23",
+  "\n        Os cálculos são:\n      ",
+  "7 × 1 = 7\n\n3 × 2 = 6\n\n4 × 3 = 12\n\n1 × 23 = 23",
+  "\n        Somando:\n      ",
+  "7 + 6 + 12 + 23 = 48",
+  "\n        Portanto:\n      ",
+  "BASE = 48",
+  "\n        6. Criação da mensagem\n      ",
+  "\n        A BASE é combinada com o nome normalizado e o PIN em\n        uma mensagem padronizada.\n      ",
+  "name=gerador|pin=0123|base=48",
+  "\n        O formato utilizado pelo código é:\n      ",
+  "name=NOME_NORMALIZADO|pin=PIN|base=BASE",
+  "\n        A mensagem é determinística: para os mesmos dados,\n        ela será exatamente igual.\n      ",
+  "\n        7. Senha como chave do HMAC\n      ",
+  "\n        A senha não é simplesmente concatenada à mensagem.\n        Ela é utilizada como a chave criptográfica do HMAC.\n      ",
+  "Chave:\nsenha123\n\nMensagem:\nname=gerador|pin=0123|base=48\n\nAlgoritmo:\nHMAC-SHA-256",
+  "\n        O aplicativo utiliza a Web Crypto API nativa do\n        navegador por meio de ",
+  "crypto.subtle",
+  ".\n      ",
+  "\n        8. HMAC-SHA-256\n      ",
+  "\n        O navegador calcula o HMAC-SHA-256 utilizando a senha\n        como chave e a mensagem como conteúdo autenticado.\n      ",
+  "senha123\n      +\nname=gerador|pin=0123|base=48\n      ↓\nHMAC-SHA-256\n      ↓\n32 bytes",
+  "\n        SHA-256 produz um resultado de 256 bits, que\n        correspondem a 32 bytes.\n      ",
+  "\n        9. Conversão para BigInt\n      ",
+  "\n        Os 32 bytes produzidos pelo HMAC são interpretados\n        como um único número inteiro positivo utilizando\n        ",
+  "BigInt",
+  ".\n      ",
+  "32 bytes\n   ↓\nBigInt",
+  "\n        Isso permite realizar a conversão numérica necessária\n        sem depender da precisão limitada dos números\n        convencionais do JavaScript.\n      ",
+  "\n        10. Módulo 62¹²\n      ",
+  "\n        Para limitar o resultado ao espaço de possíveis\n        códigos com exatamente 12 caracteres Base62,\n        o número é reduzido utilizando módulo\n        ",
+  "62¹²",
+  ".\n      ",
+  "BigInt\n  ↓\nBigInt % 62¹²",
+  "\n        Essa etapa mantém o resultado dentro do intervalo\n        necessário para representar 12 posições Base62.\n      ",
+  "\n        11. Base62\n      ",
+  "\n        O número é convertido utilizando 62 símbolos:\n      ",
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789",
+  "\n        São 26 letras maiúsculas, 26 letras minúsculas e\n        10 números, totalizando 62 caracteres.\n      ",
+  "\n        12. Código final\n      ",
+  "\n        A conversão é realizada até formar exatamente\n        12 caracteres.\n      ",
+  "HMAC-SHA-256\n      ↓\nBigInt\n      ↓\nmódulo 62¹²\n      ↓\nBase62\n      ↓\n12 caracteres",
+  "\n        Se a representação precisar de caracteres adicionais\n        para completar as 12 posições, o algoritmo preenche\n        as posições iniciais com o primeiro símbolo do\n        alfabeto Base62.\n      ",
+  "\n        13. Determinismo\n      ",
+  "\n        O sistema não utiliza números aleatórios, data ou\n        horário.\n      ",
+  "\n        Por isso, mantendo exatamente os mesmos dados:\n      ",
+  "Nome:\nGerador\n\nSenha:\nsenha123\n\nPIN:\n0123",
+  "\n        as etapas produzirão a mesma mensagem, o mesmo HMAC\n        e o mesmo código final.\n      ",
+  "mesmas entradas\n      ↓\nmesma BASE\n      ↓\nmesma mensagem\n      ↓\nmesmo HMAC\n      ↓\nmesmo código",
+  "\n        Alterar o nome, a senha ou o PIN altera a entrada do\n        processo e, consequentemente, o resultado esperado.\n      ",
+  "\n        14. Atualização automática\n      ",
+  "\n        O gerador acompanha as alterações nos três campos.\n        Quando Nome, Senha ou PIN são modificados, uma nova\n        geração é iniciada.\n      ",
+  "Nome alterado\n      ↓\nnova geração\n\nSenha alterada\n      ↓\nnova geração\n\nPIN alterado\n      ↓\nnova geração",
+  "\n        O processamento continua acontecendo somente no\n        navegador.\n      ",
+  "\n        15. Proteção contra resultados antigos\n      ",
+  "\n        O HMAC é calculado de forma assíncrona. Por isso,\n        uma alteração rápida dos campos poderia iniciar\n        vários cálculos ao mesmo tempo.\n      ",
+  "\n        O aplicativo atribui um identificador a cada geração.\n        Quando um cálculo termina, seu identificador é\n        comparado com o da geração mais recente.\n      ",
+  "Geração 1 iniciada\n      ↓\nusuário altera os dados\n      ↓\nGeração 2 iniciada\n      ↓\nGeração 2 termina\n      ↓\nGeração 1 termina depois\n      ↓\nresultado da Geração 1 é ignorado",
+  "\n        Assim, um cálculo antigo não substitui o resultado\n        mais recente.\n      ",
+  "\n        🔒 Segurança e privacidade\n      ",
+  "\n        O processamento é realizado 100% localmente no\n        navegador.\n      ",
+  "\n        O aplicativo não envia Nome, Senha, PIN ou código\n        para nenhum servidor.\n      ",
+  "\n        Não utiliza banco de dados, API externa ou serviço\n        de terceiros.\n      ",
+  "\n        Senha e PIN não são armazenados em\n        ",
+  "localStorage",
+  " ou\n        ",
+  "sessionStorage",
+  ".\n      ",
+  "\n        O sistema não utiliza ",
+  "Math.random()",
+  ",\n        data, hora ou TOTP.\n      ",
+  "\n        A Web Crypto API do navegador é utilizada para\n        executar o HMAC-SHA-256.\n      ",
+  "\n        ⚠️ Importante\n      ",
+  "\n        Este aplicativo é um gerador determinístico de\n        códigos baseado em HMAC-SHA-256.\n      ",
+  "\n        Ele ",
+  "não é TOTP",
+  " e não deve ser\n        considerado um sistema de autenticação de dois\n        fatores.\n      ",
+  "\n        O projeto não substitui mecanismos profissionais\n        de autenticação, gerenciamento de credenciais ou\n        sistemas de segurança desenvolvidos especificamente\n        para esse propósito.\n      ",
+  "\n        16. Exemplo completo\n      ",
+  "\n        Utilizando:\n      ",
+  "Nome:\nGerador\n\nSenha:\nsenha123\n\nPIN:\n0123",
+  "\n        O processo será:\n      ",
+  "Gerador\n  ↓\ngerador\n  ↓\n7 letras\n3 vogais\n4 consoantes\n  ↓\nPIN 0123\n  ↓\n01 | 2 | 3\n  ↓\nBASE = 48\n  ↓\nname=gerador|pin=0123|base=48\n  ↓\nsenha123 como chave\n  ↓\nHMAC-SHA-256\n  ↓\nBigInt\n  ↓\nmódulo 62¹²\n  ↓\nBase62\n  ↓\n12 caracteres",
+  "\n      ← Voltar para o gerador\n    "
+]
+
+};
+
+
+const UI_TRANSLATIONS = {
+
+  "en-US": {
+    waiting: "Waiting for input",
+    enterName: "Enter the name.",
+    enterPassword: "Enter the password.",
+    invalidPin: "The PIN must contain exactly 4 digits.",
+    cryptoUnavailable: "The Web Crypto API is not available in this browser.",
+    noCodeToCopy: "There is no valid code to copy.",
+    copied: "✓ Code copied",
+    copyFailed: "Unable to copy the code.",
+    updating: "Updating…",
+    codeUpdated: "✓ Code updated",
+    generationError: "Error generating code:",
+    generationFailed: "Unable to generate the code.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    showPin: "Show PIN",
+    hidePin: "Hide PIN",
+    enableDarkMode: "Enable dark mode",
+    enableLightMode: "Enable light mode",
+    switchToPortuguese: "Switch to Portuguese (Brazil)",
+    switchToEnglish: "Switch to English (US)",
+    languageTitle: "Switch language",
+    toggleTheme: "Toggle theme",
+    generatedCode: "Generated code"
+  },
+
+  "pt-BR": {
+    waiting: "Aguardando dados",
+    enterName: "Informe o nome.",
+    enterPassword: "Informe a senha.",
+    invalidPin: "O PIN deve conter exatamente 4 dígitos.",
+    cryptoUnavailable: "A Web Crypto API não está disponível neste navegador.",
+    noCodeToCopy: "Não há um código válido para copiar.",
+    copied: "✓ Código copiado",
+    copyFailed: "Não foi possível copiar o código.",
+    updating: "Atualizando…",
+    codeUpdated: "✓ Código atualizado",
+    generationError: "Erro ao gerar código:",
+    generationFailed: "Não foi possível gerar o código.",
+    showPassword: "Mostrar senha",
+    hidePassword: "Ocultar senha",
+    showPin: "Mostrar PIN",
+    hidePin: "Ocultar PIN",
+    enableDarkMode: "Ativar modo escuro",
+    enableLightMode: "Ativar modo claro",
+    switchToPortuguese: "Mudar para português (Brasil)",
+    switchToEnglish: "Mudar para inglês (EUA)",
+    languageTitle: "Alterar idioma",
+    toggleTheme: "Alternar tema",
+    generatedCode: "Código gerado"
+  }
+
+};
+
+
+let currentLanguage = "en-US";
+
+
+function t(key) {
+
+  return UI_TRANSLATIONS[currentLanguage][key];
+
+}
+
+
+function getTranslatableTextNodes() {
+
+  const nodes = [];
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT
+  );
+
+  let node;
+
+  while ((node = walker.nextNode())) {
+
+    if (!node.nodeValue.trim()) {
+      continue;
+    }
+
+    const parent = node.parentElement;
+
+    if (!parent || parent.closest("script, style, #code, #codigo, #status, #theme, .eye, #languageToggle")) {
+      continue;
+    }
+
+    nodes.push(node);
+
+  }
+
+  return nodes;
+
+}
+
+
+function setLanguage(language) {
+
+  currentLanguage = language;
+
+  const nodes = getTranslatableTextNodes();
+  const translations = LANGUAGE_TEXT[language];
+
+  nodes.forEach((node, index) => {
+
+    if (translations[index] !== undefined) {
+      node.nodeValue = translations[index];
+    }
+
+  });
+
+  document.documentElement.lang = language;
+
+  document.title =
+    language === "en-US"
+      ? "Code Generator"
+      : "Gerador de Código";
+
+  document
+    .querySelector('meta[name="description"]')
+    .setAttribute(
+      "content",
+      language === "en-US"
+        ? "Deterministic code generator based on HMAC-SHA-256"
+        : "Gerador determinístico de códigos baseado em HMAC-SHA-256"
+    );
+
+  elements.language.textContent =
+    language === "en-US"
+      ? "EN"
+      : "PT-BR";
+
+  elements.language.setAttribute(
+    "aria-label",
+    language === "en-US"
+      ? t("switchToPortuguese")
+      : t("switchToEnglish")
+  );
+
+  elements.language.setAttribute(
+    "title",
+    t("languageTitle")
+  );
+
+  elements.name.setAttribute(
+    "placeholder",
+    language === "en-US"
+      ? "Enter name"
+      : "Digite o nome"
+  );
+
+  elements.password.setAttribute(
+    "placeholder",
+    language === "en-US"
+      ? "Enter password"
+      : "Digite a senha"
+  );
+
+  elements.theme.setAttribute(
+    "title",
+    t("toggleTheme")
+  );
+
+  const lightTheme =
+    document.body.classList.contains("light");
+
+  elements.theme.setAttribute(
+    "aria-label",
+    lightTheme
+      ? t("enableDarkMode")
+      : t("enableLightMode")
+  );
+
+  elements.theme.setAttribute(
+    "aria-pressed",
+    lightTheme ? "true" : "false"
+  );
+
+  elements.code.setAttribute(
+    "aria-label",
+    t("generatedCode")
+  );
+
+  elements.eyePassword.setAttribute(
+    "aria-label",
+    elements.password.type === "text"
+      ? t("hidePassword")
+      : t("showPassword")
+  );
+
+  elements.eyePassword.setAttribute(
+    "aria-pressed",
+    elements.password.type === "text" ? "true" : "false"
+  );
+
+  elements.eyePassword.setAttribute(
+    "title",
+    elements.password.type === "text"
+      ? t("hidePassword")
+      : t("showPassword")
+  );
+
+  elements.eyePin.setAttribute(
+    "aria-label",
+    elements.pin.type === "text"
+      ? t("hidePin")
+      : t("showPin")
+  );
+
+  elements.eyePin.setAttribute(
+    "aria-pressed",
+    elements.pin.type === "text" ? "true" : "false"
+  );
+
+  elements.eyePin.setAttribute(
+    "title",
+    elements.pin.type === "text"
+      ? t("hidePin")
+      : t("showPin")
+  );
+
+  elements.copy.setAttribute(
+    "aria-label",
+    language === "en-US"
+      ? "Copy generated code"
+      : "Copiar código gerado"
+  );
+
+  elements.clear.setAttribute(
+    "aria-label",
+    language === "en-US"
+      ? "Clear name, password, PIN, and code"
+      : "Limpar nome, senha, PIN e código"
+  );
+
+  elements.howButton.setAttribute(
+    "aria-label",
+    language === "en-US"
+      ? "Open a detailed explanation of how the generator works"
+      : "Abrir explicação detalhada de como o gerador funciona"
+  );
+
+  elements.backButton.setAttribute(
+    "aria-label",
+    language === "en-US"
+      ? "Back to generator"
+      : "Voltar para o gerador"
+  );
+
+  elements.backButtonBottom.setAttribute(
+    "aria-label",
+    language === "en-US"
+      ? "Back to generator"
+      : "Voltar para o gerador"
+  );
+
+  const currentStatus = elements.status.textContent.trim();
+
+  for (const key of Object.keys(UI_TRANSLATIONS["en-US"])) {
+
+    if (UI_TRANSLATIONS["en-US"][key] === currentStatus ||
+        UI_TRANSLATIONS["pt-BR"][key] === currentStatus) {
+      setStatus(t(key));
+      break;
+    }
+
+  }
+
+}
+
+
+function toggleLanguage() {
+
+  setLanguage(
+    currentLanguage === "en-US"
+      ? "pt-BR"
+      : "en-US"
+  );
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(
+  message,
+  type = ""
+) {
+
+  elements.status.textContent =
+    message;
+
+  elements.status.className =
+    "result-state";
+
+  if (type) {
+
+    elements.status.classList.add(
+      type
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   RESULT
+========================================================= */
+
+function setCode(
+  value,
+  loading = false
+) {
+
+  elements.code.textContent =
+    value;
+
+  elements.code.classList.toggle(
+    "loading",
+    loading
+  );
+
+
+  /*
+   * Communicate to assistive technologies that the
+   * code is only actionable when it is a valid code.
+   */
+
+  const isValidCode =
+    /^[A-Za-z0-9]{12}$/.test(value);
+
+  elements.code.setAttribute(
+    "aria-disabled",
+    isValidCode ? "false" : "true"
+  );
+
+}
+
+
+/* =========================================================
+   VALIDATION
+========================================================= */
+
+function validateInputs() {
+
+  const name =
+    elements.name.value.trim();
+
+  const password =
+    elements.password.value;
+
+  const pin =
+    elements.pin.value;
+
+
+  elements.name.setAttribute(
+    "aria-invalid",
+    name ? "false" : "true"
+  );
+
+
+  elements.password.setAttribute(
+    "aria-invalid",
+    password ? "false" : "true"
+  );
+
+
+  const validPin =
+    /^\d{4}$/.test(pin);
+
+
+  elements.pin.setAttribute(
+    "aria-invalid",
+    validPin ? "false" : "true"
+  );
+
+
+  if (!name) {
+
+    return {
+      valid: false,
+      message: t("enterName")
+    };
+
+  }
+
+
+  if (!password) {
+
+    return {
+      valid: false,
+      message: t("enterPassword")
+    };
+
+  }
+
+
+  if (!validPin) {
+
+    return {
+      valid: false,
+      message:
+        t("invalidPin")
+    };
+
+  }
+
+
+  return {
+    valid: true,
+    name,
+    password,
+    pin
+  };
+
+}
+
+
+/* =========================================================
+   NAME NORMALIZATION
+========================================================= */
+
+function normalizeName(
+  value
+) {
+
+  return value
+    .trim()
+    .toLocaleLowerCase("en-US")
+    .normalize("NFC");
+
+}
+
+
+/* =========================================================
+   LETTER COUNT
+========================================================= */
+
+function countCharacters(
+  name
+) {
+
+  let letters = 0;
+
+  let vowels = 0;
+
+  let consonants = 0;
+
+
+  for (
+    const char of name
+  ) {
+
+    /*
+     * Somente letters Unicode participam
+     * counts.
+     */
+
+    if (!/\p{L}/u.test(char)) {
+
+      continue;
+
+    }
+
+
+    letters++;
+
+
+    if (
+      VOWELS.has(char)
+    ) {
+
+      vowels++;
+
+    } else {
+
+      consonants++;
+
+    }
+
+  }
+
+
+  return {
+
+    letters,
+    vowels,
+    consonants
+
+  };
+
+}
+
+
+/* =========================================================
+   PIN INTERPRETATION
+========================================================= */
+
+function parsePin(
+  pin
+) {
+
+  return {
+
+    AB:
+      Number(
+        pin.slice(0, 2)
+      ),
+
+    C:
+      Number(
+        pin[2]
+      ),
+
+    D:
+      Number(
+        pin[3]
+      ),
+
+    CD:
+      Number(
+        pin.slice(2, 4)
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   BASE CALCULATION
+========================================================= */
+
+function calculateBase(
+  counts,
+  pin
+) {
+
+  const parts =
+    parsePin(pin);
+
+
+  return (
+
+    counts.letters *
+      parts.AB
+
+    +
+
+    counts.vowels *
+      parts.C
+
+    +
+
+    counts.consonants *
+      parts.D
+
+    +
+
+    parts.AB *
+      parts.CD
+
+  );
+
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function createMessage(
+  name,
+  pin,
+  base
+) {
+
+  return (
+    `name=${name}|pin=${pin}|base=${base}`
+  );
+
+}
+
+
+/* =========================================================
+   HMAC-SHA-256
+========================================================= */
+
+async function generateHmac(
+  password,
+  message
+) {
+
+  if (
+    !window.crypto ||
+    !window.crypto.subtle
+  ) {
+
+    throw new Error(
+      t("cryptoUnavailable")
+    );
+
+  }
+
+
+  const encoder =
+    new TextEncoder();
+
+
+  const key =
+    await crypto.subtle.importKey(
+
+      "raw",
+
+      encoder.encode(password),
+
+      {
+        name: "HMAC",
+        hash: "SHA-256"
+      },
+
+      false,
+
+      ["sign"]
+
+    );
+
+
+  return crypto.subtle.sign(
+
+    "HMAC",
+
+    key,
+
+    encoder.encode(message)
+
+  );
+
+}
+
+
+/* =========================================================
+   BASE62 CONVERSION
+========================================================= */
+
+function hmacToBase62(
+  buffer
+) {
+
+  const bytes =
+    new Uint8Array(buffer);
+
+
+  /*
+   * The 32 bytes are interpreted
+   * as a positive BigInt.
+   */
+
+  let numero = 0n;
+
+
+  for (
+    const byte of bytes
+  ) {
+
+    numero =
+      (
+        numero << 8n
+      ) |
+      BigInt(byte);
+
+  }
+
+
+  /*
+   * Limits the result to the space
+   * of exactly 12 Base62 characters.
+   */
+
+  const limite =
+    62n ** 12n;
+
+
+  numero =
+    numero % limite;
+
+
+  let result =
+    "";
+
+
+  /*
+   * Each division by 62 produces
+   * a Base62 symbol.
+   */
+
+  for (
+    let i = 0;
+    i < 12;
+    i++
+  ) {
+
+    const resto =
+      numero % 62n;
+
+
+    result =
+      BASE62[
+        Number(resto)
+      ] +
+      result;
+
+
+    numero =
+      numero / 62n;
+
+  }
+
+
+  return result;
+
+}
+
+
+/* =========================================================
+   COPY CODE
+========================================================= */
+
+async function copyCode() {
+
+  const value =
+    elements.code.textContent;
+
+
+  if (
+    !/^[A-Za-z0-9]{12}$/.test(value)
+  ) {
+
+    setStatus(
+      t("noCodeToCopy"),
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    if (
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText ===
+        "function"
+    ) {
+
+      await navigator.clipboard.writeText(
+        value
+      );
+
+    } else {
+
+      copyWithFallback(value);
+
+    }
+
+
+    setStatus(
+      t("copied"),
+      "success"
+    );
+
+
+  } catch (error) {
+
+    try {
+
+      copyWithFallback(value);
+
+      setStatus(
+        t("copied"),
+        "success"
+      );
+
+    } catch {
+
+      setStatus(
+        t("copyFailed"),
+        "error"
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   COPY FALLBACK
+========================================================= */
+
+function copyWithFallback(
+  value
+) {
+
+  const area =
+    document.createElement(
+      "textarea"
+    );
+
+
+  area.value =
+    value;
+
+
+  area.setAttribute(
+    "readonly",
+    ""
+  );
+
+
+  area.style.position =
+    "fixed";
+
+  area.style.opacity =
+    "0";
+
+  area.style.pointerEvents =
+    "none";
+
+
+  document.body.appendChild(
+    area
+  );
+
+
+  area.focus();
+
+  area.select();
+
+
+  const success =
+    document.execCommand(
+      "copy"
+    );
+
+
+  area.remove();
+
+
+  if (!success) {
+
+    throw new Error(
+      "Failed to copy."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   UPDATE CODE
+========================================================= */
+
+async function updateCode() {
+
+  const currentId =
+    ++generationId;
+
+
+  const data =
+    validateInputs();
+
+
+  if (!data.valid) {
+
+    setCode(
+      "------------"
+    );
+
+    elements.copy.disabled =
+      true;
+
+    setStatus(
+      data.message,
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * Mostra imediatamente que uma
+   * new generation is in progress.
+   */
+
+  setCode(
+    "••••••••••••",
+    true
+  );
+
+
+  elements.copy.disabled =
+    true;
+
+
+  setStatus(
+    t("updating"),
+    "loading"
+  );
+
+
+  try {
+
+    const normalizedName =
+      normalizeName(
+        data.name
+      );
+
+
+    const counts =
+      countCharacters(
+        normalizedName
+      );
+
+
+    const base =
+      calculateBase(
+        counts,
+        data.pin
+      );
+
+
+    const message =
+      createMessage(
+        normalizedName,
+        data.pin,
+        base
+      );
+
+
+    const hmac =
+      await generateHmac(
+        data.password,
+        message
+      );
+
+
+    /*
+     * If a newer generation has already
+     * started, this result should not
+     * deve ser aplicado.
+     */
+
+    if (
+      currentId !== generationId
+    ) {
+
+      return;
+
+    }
+
+
+    const code =
+      hmacToBase62(
+        hmac
+      );
+
+
+    setCode(
+      code
+    );
+
+
+    elements.copy.disabled =
+      false;
+
+
+    setStatus(
+      t("codeUpdated"),
+      "success"
+    );
+
+
+  } catch (error) {
+
+    /*
+     * It also prevents an old generation
+     * from changing the current state.
+     */
+
+    if (
+      currentId !== generationId
+    ) {
+
+      return;
+
+    }
+
+
+    setCode(
+      "------------"
+    );
+
+
+    elements.copy.disabled =
+      true;
+
+
+    console.error(
+      t("generationError"),
+      error
+    );
+
+
+    setStatus(
+      t("generationFailed"),
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   UPDATE SCHEDULING
+========================================================= */
+
+let updateTimer =
+  null;
+
+
+function requestUpdate() {
+
+  clearTimeout(
+    updateTimer
+  );
+
+
+  /*
+   * Debounce: waits a short moment after the
+   * last keystroke before calculating HMAC.
+   * This reduces CPU usage on mobile and avoids
+   * running many crypto operations while typing.
+   */
+
+  updateTimer =
+    setTimeout(
+      updateCode,
+      150
+    );
+
+}
+
+
+/* =========================================================
+   PIN NORMALIZATION
+========================================================= */
+
+function normalizePinInput(
+  evento
+) {
+
+  const input =
+    evento.currentTarget;
+
+
+  /*
+   * Keeps digits only.
+   */
+
+  const value =
+    input.value
+      .replace(
+        /\D/g,
+        ""
+      )
+      .slice(
+        0,
+        4
+      );
+
+
+  if (
+    input.value !== value
+  ) {
+
+    input.value =
+      value;
+
+  }
+
+
+  requestUpdate();
+
+}
+
+
+/* =========================================================
+   SHOW / HIDE PASSWORD
+========================================================= */
+
+function togglePassword() {
+
+  const show =
+    elements.password.type ===
+    "password";
+
+
+  elements.password.type =
+    show
+      ? "text"
+      : "password";
+
+
+  elements.eyePassword.textContent =
+    show
+      ? "🙈"
+      : "👁";
+
+
+  elements.eyePassword.setAttribute(
+    "aria-label",
+    show
+      ? t("hidePassword")
+      : t("showPassword")
+  );
+
+
+  elements.eyePassword.setAttribute(
+    "aria-pressed",
+    show ? "true" : "false"
+  );
+
+
+  elements.eyePassword.setAttribute(
+    "title",
+    show
+      ? t("hidePassword")
+      : t("showPassword")
+  );
+
+}
+
+
+/* =========================================================
+   SHOW / HIDE PIN
+========================================================= */
+
+function togglePin() {
+
+  const show =
+    elements.pin.type ===
+    "password";
+
+
+  elements.pin.type =
+    show
+      ? "text"
+      : "password";
+
+
+  elements.eyePin.textContent =
+    show
+      ? "🙈"
+      : "👁";
+
+
+  elements.eyePin.setAttribute(
+    "aria-label",
+    show
+      ? t("hidePin")
+      : t("showPin")
+  );
+
+
+  elements.eyePin.setAttribute(
+    "aria-pressed",
+    show ? "true" : "false"
+  );
+
+
+  elements.eyePin.setAttribute(
+    "title",
+    show
+      ? t("hidePin")
+      : t("showPin")
+  );
+
+}
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+function clearAll() {
+
+  /*
+   * Immediately invalidates any
+   * generation that is still in progress.
+   */
+
+  generationId++;
+
+
+  clearTimeout(
+    updateTimer
+  );
+
+
+  elements.name.value =
+    "";
+
+  elements.password.value =
+    "";
+
+  elements.pin.value =
+    "";
+
+
+  elements.name.setAttribute(
+    "aria-invalid",
+    "true"
+  );
+
+  elements.password.setAttribute(
+    "aria-invalid",
+    "true"
+  );
+
+  elements.pin.setAttribute(
+    "aria-invalid",
+    "true"
+  );
+
+
+  setCode(
+    "------------"
+  );
+
+
+  elements.copy.disabled =
+    true;
+
+
+  setStatus(
+    t("waiting")
+  );
+
+
+  elements.name.focus();
+
+}
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function toggleTheme() {
+
+  document.body.classList.toggle(
+    "light"
+  );
+
+
+  const claro =
+    document.body.classList.contains(
+      "light"
+    );
+
+
+  elements.theme.textContent =
+    claro
+      ? "☀️"
+      : "🌙";
+
+
+  elements.theme.setAttribute(
+    "aria-label",
+    claro
+      ? t("enableDarkMode")
+      : t("enableLightMode")
+  );
+
+
+  elements.theme.setAttribute(
+    "aria-pressed",
+    claro ? "true" : "false"
+  );
+
+
+  elements.theme.setAttribute(
+    "title",
+    claro
+      ? t("enableDarkMode")
+      : t("enableLightMode")
+  );
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function openExplanation() {
+
+  elements.mainPage
+    .classList
+    .add("hidden");
+
+
+  elements.explanationPage
+    .classList
+    .remove("hidden");
+
+
+  window.scrollTo(
+    0,
+    0
+  );
+
+}
+
+
+function backToGenerator() {
+
+  elements.explanationPage
+    .classList
+    .add("hidden");
+
+
+  elements.mainPage
+    .classList
+    .remove("hidden");
+
+
+  window.scrollTo(
+    0,
+    0
+  );
+
+
+  elements.name.focus();
+
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+elements.name.addEventListener(
+  "input",
+  requestUpdate
+);
+
+
+elements.password.addEventListener(
+  "input",
+  requestUpdate
+);
+
+
+elements.pin.addEventListener(
+  "input",
+  normalizePinInput
+);
+
+
+elements.pin.addEventListener(
+  "paste",
+  () => {
+
+    /*
+     * The input event will be triggered
+     * after pasting and will perform the cleanup.
+     */
+
+    requestAnimationFrame(
+      () => {
+        normalizePinInput({
+          currentTarget:
+            elements.pin
+        });
+      }
+    );
+
+  }
+);
+
+
+elements.copy.addEventListener(
+  "click",
+  copyCode
+);
+
+
+elements.clear.addEventListener(
+  "click",
+  clearAll
+);
+
+
+elements.eyePassword.addEventListener(
+  "click",
+  togglePassword
+);
+
+
+elements.eyePin.addEventListener(
+  "click",
+  togglePin
+);
+
+
+elements.theme.addEventListener(
+  "click",
+  toggleTheme
+);
+
+
+elements.language.addEventListener(
+  "click",
+  toggleLanguage
+);
+
+
+elements.howButton.addEventListener(
+  "click",
+  openExplanation
+);
+
+
+elements.backButton.addEventListener(
+  "click",
+  backToGenerator
+);
+
+
+elements.backButtonBottom.addEventListener(
+  "click",
+  backToGenerator
+);
+
+
+/* =========================================================
+   INITIAL STATE
+========================================================= */
+
+setLanguage("en-US");
+
+
+elements.name.setAttribute(
+  "aria-invalid",
+  "true"
+);
+
+elements.password.setAttribute(
+  "aria-invalid",
+  "true"
+);
+
+elements.pin.setAttribute(
+  "aria-invalid",
+  "true"
+);
+
+setStatus(
+  t("waiting")
+);
+
+
+/* =========================================================
+   USABILITY LAYER
+
+   This section only improves the interface.
+   It does not touch the deterministic calculation
+   (normalization, BASE, message, HMAC or Base62).
+========================================================= */
+
+const PREFERENCES_KEY_LANGUAGE =
+  "generator.language";
+
+const PREFERENCES_KEY_THEME =
+  "generator.theme";
+
+
+/*
+ * Preferences are limited to language and theme.
+ * Name, password and PIN are never stored.
+ */
+
+function readPreference(
+  key
+) {
+
+  try {
+
+    return window.localStorage.getItem(
+      key
+    );
+
+  } catch {
+
+    return null;
+
+  }
+
+}
+
+
+function writePreference(
+  key,
+  value
+) {
+
+  try {
+
+    window.localStorage.setItem(
+      key,
+      value
+    );
+
+  } catch {
+
+    /*
+     * Storage may be unavailable
+     * (private mode, blocked cookies).
+     */
+
+  }
+
+}
+
+
+/* ---------- restore language ---------- */
+
+const storedLanguage =
+  readPreference(
+    PREFERENCES_KEY_LANGUAGE
+  );
+
+
+const preferredLanguage =
+  storedLanguage === "pt-BR" ||
+  storedLanguage === "en-US"
+    ? storedLanguage
+    : (navigator.language || "en-US")
+        .toLowerCase()
+        .startsWith("pt")
+      ? "pt-BR"
+      : "en-US";
+
+
+if (
+  preferredLanguage !== currentLanguage
+) {
+
+  setLanguage(
+    preferredLanguage
+  );
+
+  setStatus(
+    t("waiting")
+  );
+
+}
+
+
+elements.language.addEventListener(
+  "click",
+  () => {
+
+    writePreference(
+      PREFERENCES_KEY_LANGUAGE,
+      currentLanguage
+    );
+
+  }
+);
+
+
+/* ---------- restore theme ---------- */
+
+const storedTheme =
+  readPreference(
+    PREFERENCES_KEY_THEME
+  );
+
+
+const prefersLight =
+  typeof window.matchMedia === "function" &&
+  window.matchMedia(
+    "(prefers-color-scheme: light)"
+  ).matches;
+
+
+const shouldUseLight =
+  storedTheme === "light" ||
+  (storedTheme === null && prefersLight);
+
+
+if (
+  shouldUseLight &&
+  !document.body.classList.contains("light")
+) {
+
+  toggleTheme();
+
+}
+
+
+elements.theme.addEventListener(
+  "click",
+  () => {
+
+    writePreference(
+      PREFERENCES_KEY_THEME,
+      document.body.classList.contains("light")
+        ? "light"
+        : "dark"
+    );
+
+  }
+);
+
+
+/* ---------- keyboard flow ---------- */
+
+/*
+ * Enter moves to the next field and,
+ * on the last field, copies the code.
+ */
+
+function handleFieldEnter(
+  event,
+  nextElement
+) {
+
+  if (
+    event.key !== "Enter"
+  ) {
+
+    return;
+
+  }
+
+
+  event.preventDefault();
+
+
+  if (
+    nextElement
+  ) {
+
+    nextElement.focus();
+
+    return;
+
+  }
+
+
+  if (
+    !elements.copy.disabled
+  ) {
+
+    copyCode();
+
+  }
+
+}
+
+
+elements.name.addEventListener(
+  "keydown",
+  (event) =>
+    handleFieldEnter(
+      event,
+      elements.password
+    )
+);
+
+
+elements.password.addEventListener(
+  "keydown",
+  (event) =>
+    handleFieldEnter(
+      event,
+      elements.pin
+    )
+);
+
+
+elements.pin.addEventListener(
+  "keydown",
+  (event) =>
+    handleFieldEnter(
+      event,
+      null
+    )
+);
+
+
+/*
+ * Ctrl/Cmd + Enter copies from anywhere.
+ * Escape returns from the explanation page.
+ */
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key === "Enter"
+    ) {
+
+      if (
+        !elements.copy.disabled
+      ) {
+
+        event.preventDefault();
+
+        copyCode();
+
+      }
+
+      return;
+
+    }
+
+
+    if (
+      event.key === "Escape" &&
+      !elements.explanationPage
+        .classList
+        .contains("hidden")
+    ) {
+
+      backToGenerator();
+
+    }
+
+  }
+);
+
+
+/* ---------- click the code to copy ---------- */
+
+elements.code.style.cursor =
+  "pointer";
+
+elements.code.setAttribute(
+  "role",
+  "button"
+);
+
+elements.code.setAttribute(
+  "tabindex",
+  "0"
+);
+
+
+elements.code.addEventListener(
+  "click",
+  () => {
+
+    if (
+      !elements.copy.disabled
+    ) {
+
+      copyCode();
+
+    }
+
+  }
+);
+
+
+elements.code.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      event.key === "Enter" ||
+      event.key === " "
+    ) {
+
+      event.preventDefault();
+
+
+      if (
+        !elements.copy.disabled
+      ) {
+
+        copyCode();
+
+      }
+
+    }
+
+  }
+);
+
+
+/* ---------- smaller conveniences ---------- */
+
+/*
+ * Selecting the PIN on focus makes
+ * replacing it faster on mobile.
+ */
+
+elements.pin.addEventListener(
+  "focus",
+  () => {
+
+    elements.pin.select();
+
+  }
+);
+
+
+/*
+ * Starts with the cursor in the first field.
+ */
+
+elements.name.focus();
+
+
+</script>
+
+
+</body>
+
+</html>
