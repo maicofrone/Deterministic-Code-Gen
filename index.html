@@ -1977,7 +1977,7 @@ BigInt % 62¹²</div>
 
       <p>
         This step keeps the result within the range
-        required to represent 12 Base62 positions.
+        required to represent 12 Base73 positions.
       </p>
 
     </div>
@@ -2348,7 +2348,7 @@ Base62
 
 
 const BASE62 =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*-_+=";
 
 
 const VOWELS = new Set([
@@ -2526,7 +2526,7 @@ const LANGUAGE_TEXT = {
   "62¹²",
   ".\n      ",
   "BigInt\n  ↓\nBigInt % 62¹²",
-  "\n        This step keeps the result within the range\n        required to represent 12 Base62 positions.\n      ",
+  "\n        This step keeps the result within the range\n        required to represent 12 Base73 positions.\n      ",
   "\n        11. Base62\n      ",
   "\n        The number is converted using 62 symbols:\n      ",
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789",
@@ -3155,7 +3155,8 @@ function normalizeName(
   return value
     .trim()
     .toLocaleLowerCase("en-US")
-    .normalize("NFC");
+    .normalize("NFC")
+    .replace(/\s+/gu, "");
 
 }
 
@@ -3402,11 +3403,11 @@ function hmacToBase62(
 
   /*
    * Limits the result to the space
-   * of exactly 12 Base62 characters.
+   * of exactly 12 Base73 characters.
    */
 
   const limite =
-    62n ** 12n;
+    73n ** 12n;
 
 
   numero =
@@ -3419,7 +3420,7 @@ function hmacToBase62(
 
   /*
    * Each division by 62 produces
-   * a Base62 symbol.
+   * a Base73 symbol.
    */
 
   for (
@@ -3429,7 +3430,7 @@ function hmacToBase62(
   ) {
 
     const resto =
-      numero % 62n;
+      numero % 73n;
 
 
     result =
@@ -3440,10 +3441,91 @@ function hmacToBase62(
 
 
     numero =
-      numero / 62n;
+      numero / 73n;
 
   }
 
+
+  /*
+   * Guarantees that the final 12-character code contains
+   * at least one uppercase letter, one lowercase letter,
+   * one number, and one special character.
+   *
+   * The selection is deterministic and uses the HMAC bytes;
+   * no random value, date, or time is introduced.
+   */
+  const UPPERCASE =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  const LOWERCASE =
+    "abcdefghijklmnopqrstuvwxyz";
+
+  const NUMBERS =
+    "0123456789";
+
+  const SPECIALS =
+    "!@#$%&*-_+=";
+
+  const categories = [
+    UPPERCASE,
+    LOWERCASE,
+    NUMBERS,
+    SPECIALS
+  ];
+
+  const hasCategory = category =>
+    [...result].some(char =>
+      category.includes(char)
+    );
+
+  const missing = categories.filter(
+    category => !hasCategory(category)
+  );
+
+  /*
+   * Only replace characters when a required category
+   * is missing. This preserves the normal Base73 result
+   * whenever all four categories are already present.
+   */
+  const usedPositions = new Set();
+
+  for (
+    let categoryIndex = 0;
+    categoryIndex < missing.length;
+    categoryIndex++
+  ) {
+
+    const category =
+      missing[categoryIndex];
+
+    let position =
+      Number(
+        bytes[
+          categoryIndex % bytes.length
+        ]
+      ) % 12;
+
+    while (
+      usedPositions.has(position)
+    ) {
+      position =
+        (position + 1) % 12;
+    }
+
+    usedPositions.add(position);
+
+    const characterIndex =
+      Number(
+        bytes[
+          (categoryIndex + 4) % bytes.length
+        ]
+      ) % category.length;
+
+    result =
+      result.substring(0, position) +
+      category[characterIndex] +
+      result.substring(position + 1);
+  }
 
   return result;
 
@@ -3461,7 +3543,13 @@ async function copyCode() {
 
 
   if (
-    !/^[A-Za-z0-9]{12}$/.test(value)
+    !value ||
+    value.length !== 12 ||
+    ![...value].every(char => BASE62.includes(char)) ||
+    ![...value].some(char => /[A-Z]/.test(char)) ||
+    ![...value].some(char => /[a-z]/.test(char)) ||
+    ![...value].some(char => /[0-9]/.test(char)) ||
+    ![...value].some(char => !/[A-Za-z0-9]/.test(char))
   ) {
 
     setStatus(
